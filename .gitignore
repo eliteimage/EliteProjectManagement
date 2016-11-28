@@ -10,3 +10,6 @@ classes/
 .project
 .settings
 .classpath
+/.sass-cache/
+/.sass-work/
+/.jruby-container/

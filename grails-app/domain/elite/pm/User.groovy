@@ -1,16 +1,66 @@
 package elite.pm
 
-class User {
-	
+import groovy.transform.EqualsAndHashCode
+import groovy.transform.ToString
+
+@EqualsAndHashCode(includes='username')
+@ToString(includes='username', includeNames=true, includePackage=false)
+class User implements Serializable {
+
+	private static final long serialVersionUID = 1
+
+	transient springSecurityService
+   
+	/**
+	 * Descriptive name of this user
+	 */
 	String name
 	
+	/**
+	 * The name used for logging in
+	 */
 	String username
 	
+	/**
+	 * Encoded password
+	 */
 	String password
 	
 	String emailAddress
+	
+	boolean enabled = true
+	
+	boolean accountExpired
+	
+	boolean accountLocked
+	
+	boolean passwordExpired
 
-    static constraints = {
-    }
+	Set<Role> getAuthorities() {
+	   UserRole.findAllByUser(this)*.role
+	}
+
+	def beforeInsert() {
+	encodePassword()
+	}
+
+	def beforeUpdate() {
+		if (isDirty('password')) {
+			encodePassword()
+		}
+	}
+
+	protected void encodePassword() {
+		password = springSecurityService?.passwordEncoder ?
+				springSecurityService.encodePassword(password) :
+				password
+	}
+
+	static transients = ['springSecurityService']
+
+	static constraints = {
+		password blank: false, password: true
+		username blank: false, unique: true
+	}
 	
 }
